@@ -1,15 +1,15 @@
 module.exports = class AlphaToDegree {
     convert(chordsSyntax, key) {
         const tokens = this.tokenize(chordsSyntax);
-        return tokens.map(token => this.parseToken(token))
-            .map(node => this.convertNode(node, key))
-            .reduce((str, node, i, nodes) => {
-                const notHeadNode = str.length > 0
-                const notLineBreakNode = node.type !== "line_break";
-                const prevNodeIsNotLineBreakNode = i !== 0 && nodes[i - 1].type !== "line_break";
-                const space = notHeadNode && notLineBreakNode && prevNodeIsNotLineBreakNode ? " " : ""
-                return str + space + node.toString();
-            }, "")
+        const alphabetNodes = tokens.map(token => this.parseToken(token));
+        const degreeNodes = alphabetNodes.map(node => this.convertNode(node, key));
+        return degreeNodes.reduce((str, node, i, nodes) => {
+            const notHeadNode = str.length > 0
+            const notLineBreakNode = node.type !== "line_break";
+            const prevNodeIsNotLineBreakNode = i !== 0 && nodes[i - 1].type !== "line_break";
+            const space = notHeadNode && notLineBreakNode && prevNodeIsNotLineBreakNode ? " " : ""
+            return str + space + node.toString();
+        }, "")
     }
 
     tokenize(chordsSyntax) {
@@ -60,21 +60,19 @@ module.exports = class AlphaToDegree {
     }
 
     parseChordToken(token) {
-        const matched = token.match(/([A-G](#|b|)?)(m|sus4)?(7|M7)?(\/([A-G](#|b|)?))?/)
-        return this.makeChordNode(matched[1], matched[3], matched[4], matched[6]);
+        const matched = token.match(/^(?<root>[A-G](#|b|)?)(?<option>[^/]*)?(\/(?<baseRoot>[A-G](#|b|)?))?$/)
+        return this.makeChordNode(matched.groups.root, matched.groups.option, matched.groups.baseRoot);
     }
 
-    makeChordNode(root, third, seventh, baseRoot) {
+    makeChordNode(root, option, baseRoot) {
         return {
             type: "chord",
             root,
-            third,
-            seventh,
+            option,
             baseRoot,
             toString: function () {
                 return this.root
-                    + (this.third ? this.third : "")
-                    + (this.seventh ? this.seventh : "")
+                    + (this.option ? this.option : "")
                     + (this.baseRoot ? "/" + this.baseRoot : "")
             },
         }
@@ -101,7 +99,7 @@ module.exports = class AlphaToDegree {
             baseRoot = this.degree2degreeChar(relatedDeg);
         }
 
-        return this.makeChordNode(root, node.third, node.seventh, baseRoot);
+        return this.makeChordNode(root, node.option, baseRoot);
     }
 
     calcRelatedDegreeByKey(rootDeg, keyDeg) {
