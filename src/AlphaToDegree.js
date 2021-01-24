@@ -60,20 +60,22 @@ module.exports = class AlphaToDegree {
     }
 
     parseChordToken(token) {
-        const matched = token.match(/([A-G](^#|b|)?)(m|sus4)?(7|M7)?/)
-        return this.makeChordNode(matched[1], matched[3], matched[4]);
+        const matched = token.match(/([A-G](#|b|)?)(m|sus4)?(7|M7)?(\/([A-G](#|b|)?))?/)
+        return this.makeChordNode(matched[1], matched[3], matched[4], matched[6]);
     }
 
-    makeChordNode(root, third, seventh) {
+    makeChordNode(root, third, seventh, baseRoot) {
         return {
             type: "chord",
             root,
             third,
             seventh,
+            baseRoot,
             toString: function () {
                 return this.root
                     + (this.third ? this.third : "")
-                    + (this.seventh ? this.seventh : "");
+                    + (this.seventh ? this.seventh : "")
+                    + (this.baseRoot ? "/" + this.baseRoot : "")
             },
         }
     }
@@ -87,15 +89,32 @@ module.exports = class AlphaToDegree {
     }
 
     convertChordNode(node, key) {
-        const rootNum = this.alpha2number(node.root);
-        const keyNum = this.alpha2number(key);
+        const rootDeg = this.alpha2degree(node.root);
+        const keyDeg = this.alpha2degree(key);
+        const relatedDeg = this.calcRelatedDegreeByKey(rootDeg, keyDeg);
+        const root = this.degree2degreeChar(relatedDeg);
 
-        const root = this.number2degree(rootNum - keyNum);
+        let baseRoot = null;
+        if (node.baseRoot) {
+            const baseRootDeg = this.alpha2degree(node.baseRoot);
+            const relatedDeg = this.calcRelatedDegreeByKey(baseRootDeg, keyDeg);
+            baseRoot = this.degree2degreeChar(relatedDeg);
+        }
 
-        return this.makeChordNode(root, node.third, node.seventh);
+        return this.makeChordNode(root, node.third, node.seventh, baseRoot);
     }
 
-    alpha2number(alpha) {
+    calcRelatedDegreeByKey(rootDeg, keyDeg) {
+        let deg = rootDeg - keyDeg;
+
+        if (deg < 0) {
+            deg = 12 + deg;
+        }
+
+        return deg;
+    }
+
+    alpha2degree(alpha) {
         return {
             "C": 0,
             "C#": 1,
@@ -112,11 +131,7 @@ module.exports = class AlphaToDegree {
         }[alpha];
     }
 
-    number2degree(number) {
-        if (number < 0) {
-            number += 13
-        }
-
+    degree2degreeChar(degree) {
         return [
             "Ⅰ",
             "Ⅰ#",
@@ -130,6 +145,6 @@ module.exports = class AlphaToDegree {
             "Ⅵ",
             "Ⅵ#",
             "Ⅶ",
-        ][number]
+        ][degree]
     }
 }

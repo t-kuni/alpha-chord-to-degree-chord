@@ -16,7 +16,7 @@ describe('AlphaToDegree#convert', () => {
         const converter = new AlphaToDegree();
 
         const actual = converter.convert("GM7 A | Bm A\nGM7 C | Bsus4 B", "D");
-        const expect = "ⅣM7 Ⅴ | Ⅵm Ⅴ\nⅣM7 Ⅶ | Ⅵsus4 Ⅵ";
+        const expect = "ⅣM7 Ⅴ | Ⅵm Ⅴ\nⅣM7 Ⅵ# | Ⅵsus4 Ⅵ";
 
         assert.equal(actual, expect);
     });
