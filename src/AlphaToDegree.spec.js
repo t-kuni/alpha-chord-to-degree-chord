@@ -33,8 +33,8 @@ describe('AlphaToDegree#convert', () => {
     it('d', async () => {
         const converter = new AlphaToDegree();
 
-        const actual = converter.convert("C7 CM7 Cm7-5 Cdim C7sus4 Caug Cm6 C7(9) Cadd9 CmM7", "C");
-        const expect = "Ⅰ7 ⅠM7 Ⅰm7-5 Ⅰdim Ⅰ7sus4 Ⅰaug Ⅰm6 Ⅰ7(9) Ⅰadd9 ⅠmM7";
+        const actual = converter.convert("C7 CM7 Cm7-5 Cdim C7sus4 Caug Cm6 C7(9)/C Cadd9 CmM7", "C");
+        const expect = "Ⅰ7 ⅠM7 Ⅰm7-5 Ⅰdim Ⅰ7sus4 Ⅰaug Ⅰm6 Ⅰ7(9)/Ⅰ Ⅰadd9 ⅠmM7";
 
         assert.equal(actual, expect);
     });
