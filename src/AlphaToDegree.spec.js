@@ -3,7 +3,7 @@ const AlphaToDegree = require('./AlphaToDegree')
 const assert = require('assert');
 
 describe('AlphaToDegree#convert', () => {
-    it('aaa', async () => {
+    it('a', async () => {
         const converter = new AlphaToDegree();
 
         const actual = converter.convert("Bm | GM7 A", "D");
@@ -12,11 +12,20 @@ describe('AlphaToDegree#convert', () => {
         assert.equal(actual, expect);
     });
 
-    it('aaaa', async () => {
+    it('b', async () => {
         const converter = new AlphaToDegree();
 
         const actual = converter.convert("GM7 A | Bm A\nGM7 C | Bsus4 B", "D");
-        const expect = "ⅣM7 Ⅴ | Ⅵm Ⅴ ⅣM7 Ⅶ | Ⅵsus4 Ⅵ";
+        const expect = "ⅣM7 Ⅴ | Ⅵm Ⅴ\nⅣM7 Ⅶ | Ⅵsus4 Ⅵ";
+
+        assert.equal(actual, expect);
+    });
+
+    it('c', async () => {
+        const converter = new AlphaToDegree();
+
+        const actual = converter.convert("D#m | B | C# | F# C#/F\nD#m | B | C#sus4 C#", "F#");
+        const expect = "Ⅵm | Ⅳ | Ⅴ | Ⅰ Ⅴ/Ⅶ\nⅥm | Ⅳ | Ⅴsus4 Ⅴ";
 
         assert.equal(actual, expect);
     });

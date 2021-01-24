@@ -3,18 +3,39 @@ module.exports = class AlphaToDegree {
         const tokens = this.tokenize(chordsSyntax);
         return tokens.map(token => this.parseToken(token))
             .map(node => this.convertNode(node, key))
-            .reduce((str, node) => {
-                return str + (str.length > 0 ? " " : "") + node.toString();
+            .reduce((str, node, i, nodes) => {
+                const notHeadNode = str.length > 0
+                const notLineBreakNode = node.type !== "line_break";
+                const prevNodeIsNotLineBreakNode = i !== 0 && nodes[i - 1].type !== "line_break";
+                const space = notHeadNode && notLineBreakNode && prevNodeIsNotLineBreakNode ? " " : ""
+                return str + space + node.toString();
             }, "")
     }
 
     tokenize(chordsSyntax) {
-        return chordsSyntax.split(/\s+/)
+        /*
+         * 改行文字でトークンを分割しつつ、トークンとして残したいため以下の処理順になっている
+         * 1. 文章を行に分割
+         * 2. 行毎にトークナイズ
+         * 3. 行毎のトークンリストを改行トークンを挟みつつ結合する
+         */
+        const lines = chordsSyntax.split("\n");
+        return lines.map(l => l.split(/\s+/))
+            .reduce((array, tokens) => {
+                if (array.length > 0) {
+                    array.push("\n");
+                }
+                return array.concat(tokens);
+            }, [])
     }
 
     parseToken(token) {
         if (token === "|") {
             return this.parseSeparatorToken(token)
+        }
+
+        if (token === "\n") {
+            return this.parseLineBreakToken(token);
         }
 
         return this.parseChordToken(token)
@@ -25,6 +46,15 @@ module.exports = class AlphaToDegree {
             type: "separator",
             toString: function () {
                 return "|";
+            }
+        }
+    }
+
+    parseLineBreakToken() {
+        return {
+            type: "line_break",
+            toString: function () {
+                return "\n";
             }
         }
     }
@@ -44,18 +74,16 @@ module.exports = class AlphaToDegree {
                 return this.root
                     + (this.third ? this.third : "")
                     + (this.seventh ? this.seventh : "");
-            }
+            },
         }
     }
 
     convertNode(node, key) {
-        if (node.type === "separator") {
-            return node;
-        }
-
         if (node.type === "chord") {
             return this.convertChordNode(node, key);
         }
+
+        return node;
     }
 
     convertChordNode(node, key) {
