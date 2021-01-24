@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8"/>
+</head>
+<script>
+    class AlphaToDegree {
+        convert(chordsSyntax, key) {
+            const tokens = this.tokenize(chordsSyntax);
+            const alphabetNodes = tokens.map(token => this.parseToken(token));
+            const degreeNodes = alphabetNodes.map(node => this.convertNode(node, key));
+            return degreeNodes.reduce((str, node, i, nodes) => {
+                const notHeadNode = str.length > 0
+                const notLineBreakNode = node.type !== "line_break";
+                const prevNodeIsNotLineBreakNode = i !== 0 && nodes[i - 1].type !== "line_break";
+                const space = notHeadNode && notLineBreakNode && prevNodeIsNotLineBreakNode ? " " : ""
+                return str + space + node.toString();
+            }, "")
+        }
+
+        tokenize(chordsSyntax) {
+            /*
+             * 改行文字でトークンを分割しつつ、トークンとして残したいため以下の処理順になっている
+             * 1. 文章を行に分割
+             * 2. 行毎にトークナイズ
+             * 3. 行毎のトークンリストを改行トークンを挟みつつ結合する
+             */
+            const lines = chordsSyntax.split("\n");
+            return lines.map(l => l.split(/\s+/))
+                .reduce((array, tokens) => {
+                    if (array.length > 0) {
+                        array.push("\n");
+                    }
+                    return array.concat(tokens);
+                }, [])
+        }
+
+        parseToken(token) {
+            if (token === "|") {
+                return this.parseSeparatorToken(token)
+            }
+
+            if (token === "\n") {
+                return this.parseLineBreakToken(token);
+            }
+
+            return this.parseChordToken(token)
+        }
+
+        parseSeparatorToken() {
+            return {
+                type: "separator",
+                toString: function () {
+                    return "|";
+                }
+            }
+        }
+
+        parseLineBreakToken() {
+            return {
+                type: "line_break",
+                toString: function () {
+                    return "\n";
+                }
+            }
+        }
+
+        parseChordToken(token) {
+            const matched = token.match(/^(?<root>[A-G](#|b|)?)(?<option>[^/]*)?(\/(?<baseRoot>[A-G](#|b|)?))?$/)
+            return this.makeChordNode(matched.groups.root, matched.groups.option, matched.groups.baseRoot);
+        }
+
+        makeChordNode(root, option, baseRoot) {
+            return {
+                type: "chord",
+                root,
+                option,
+                baseRoot,
+                toString: function () {
+                    return this.root
+                        + (this.option ? this.option : "")
+                        + (this.baseRoot ? "/" + this.baseRoot : "")
+                },
+            }
+        }
+
+        convertNode(node, key) {
+            if (node.type === "chord") {
+                return this.convertChordNode(node, key);
+            }
+
+            return node;
+        }
+
+        convertChordNode(node, key) {
+            const rootDeg = this.alpha2degree(node.root);
+            const keyDeg = this.alpha2degree(key);
+            const relatedDeg = this.calcRelatedDegreeByKey(rootDeg, keyDeg);
+            const root = this.degree2degreeChar(relatedDeg);
+
+            let baseRoot = null;
+            if (node.baseRoot) {
+                const baseRootDeg = this.alpha2degree(node.baseRoot);
+                const relatedDeg = this.calcRelatedDegreeByKey(baseRootDeg, keyDeg);
+                baseRoot = this.degree2degreeChar(relatedDeg);
+            }
+
+            return this.makeChordNode(root, node.option, baseRoot);
+        }
+
+        calcRelatedDegreeByKey(rootDeg, keyDeg) {
+            let deg = rootDeg - keyDeg;
+
+            if (deg < 0) {
+                deg = 12 + deg;
+            }
+
+            return deg;
+        }
+
+        alpha2degree(alpha) {
+            return {
+                "C": 0,
+                "C#": 1,
+                "D": 2,
+                "D#": 3,
+                "E": 4,
+                "F": 5,
+                "F#": 6,
+                "G": 7,
+                "G#": 8,
+                "A": 9,
+                "A#": 10,
+                "B": 11,
+            }[alpha];
+        }
+
+        degree2degreeChar(degree) {
+            return [
+                "Ⅰ",
+                "Ⅰ#",
+                "Ⅱ",
+                "Ⅱ#",
+                "Ⅲ",
+                "Ⅳ",
+                "Ⅳ#",
+                "Ⅴ",
+                "Ⅴ#",
+                "Ⅵ",
+                "Ⅵ#",
+                "Ⅶ",
+            ][degree]
+        }
+    }
+    const a2d = new AlphaToDegree();
+
+    function convert() {
+        try {
+            const chordSyntax = document.querySelector("#chord-syntax-input").value;
+            const key = document.querySelector("#key-select").value;
+            const degreeSyntax = a2d.convert(chordSyntax, key);
+            document.querySelector("#degree-syntax-output").value = degreeSyntax;
+        } catch (e) {
+            document.querySelector("#degree-syntax-output").value = "入力に誤りがあります";
+        }
+    }
+
+    let timer = null;
+
+    function onChange(e) {
+        if (timer) {
+            clearTimeout(timer)
+        }
+        timer = setTimeout(convert, 500);
+    }
+
+    function onInput(e) {
+        if (timer) {
+            clearTimeout(timer)
+        }
+        timer = setTimeout(convert, 500);
+    }
+
+    function insert(str) {
+        const textarea = document.querySelector('#chord-syntax-input');
+
+        const sentence = textarea.value;
+        const len      = sentence.length;
+        const pos      = textarea.selectionStart;
+
+        const before   = sentence.substr(0, pos);
+        const after    = sentence.substr(pos, len);
+
+        textarea.value = before + str + after;
+
+        const newPos = pos + str.length;
+        textarea.setSelectionRange(newPos, newPos);
+
+        convert();
+    }
+</script>
+<div>
+    Key: <select id="key-select" onchange="onChange(event)">
+        <option value="C">C</option>
+        <option value="C#">C#</option>
+        <option value="D">D</option>
+        <option value="D#">D#</option>
+        <option value="E">E</option>
+        <option value="F">F</option>
+        <option value="F#">F#</option>
+        <option value="G">G</option>
+        <option value="G#">G#</option>
+        <option value="A">A</option>
+        <option value="A#">A#</option>
+        <option value="B">B</option>
+    </select>
+</div>
+<div>
+    <button onclick="insert('C')">C</button>
+    <button onclick="insert('C#')">C#</button>
+    <button onclick="insert('D')">D</button>
+    <button onclick="insert('D#')">D#</button>
+    <button onclick="insert('E')">E</button>
+    <button onclick="insert('F')">F</button>
+    <button onclick="insert('F#')">F#</button>
+    <button onclick="insert('G')">G</button>
+    <button onclick="insert('G#')">G#</button>
+    <button onclick="insert('A')">A</button>
+    <button onclick="insert('A#')">A#</button>
+    <button onclick="insert('B')">B</button>
+</div>
+<div>
+    <button onclick="insert('m')">m</button>
+    <button onclick="insert('M7')">M7</button>
+    <button onclick="insert('7')">7</button>
+    <button onclick="insert('-5')">-5</button>
+    <button onclick="insert('dim')">dim</button>
+    <button onclick="insert('sus4')">sus4</button>
+    <button onclick="insert('aug')">aug</button>
+    <button onclick="insert('6')">6</button>
+    <button onclick="insert('(9)')">(9)</button>
+    <button onclick="insert('(11)')">(11)</button>
+    <button onclick="insert('(13)')">(13)</button>
+    <button onclick="insert('/')">/</button>
+</div>
+<div>
+    <button onclick="insert(' ')">スペース</button>
+    <button onclick="insert('|')">区切り</button>
+</div>
+<div style="margin-top: 10px">
+    <textarea rows="3" style="width: 100%" id="chord-syntax-input" oninput="onInput(event)"></textarea>
+</div>
+<div>
+    ↓ディグリーネーム（度数表記）↓
+</div>
+<div>
+    <textarea rows="3" style="width: 100%" id="degree-syntax-output" readonly></textarea>
+</div>
