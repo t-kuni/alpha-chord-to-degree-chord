@@ -215,7 +215,7 @@
         <option value="B">B</option>
     </select>
 </div>
-<div>
+<div style="margin-top: 5px;">
     <button onclick="insert('C')">C</button>
     <button onclick="insert('C#')">C#</button>
     <button onclick="insert('D')">D</button>
@@ -229,7 +229,7 @@
     <button onclick="insert('A#')">A#</button>
     <button onclick="insert('B')">B</button>
 </div>
-<div>
+<div style="margin-top: 5px;">
     <button onclick="insert('m')">m</button>
     <button onclick="insert('M7')">M7</button>
     <button onclick="insert('7')">7</button>
@@ -243,16 +243,15 @@
     <button onclick="insert('(13)')">(13)</button>
     <button onclick="insert('/')">/</button>
 </div>
-<div>
+<div style="margin-top: 5px;">
     <button onclick="insert(' ')">スペース</button>
     <button onclick="insert('|')">区切り</button>
 </div>
-<div style="margin-top: 10px">
-    <textarea rows="3" style="width: 100%" id="chord-syntax-input" oninput="onInput(event)"></textarea>
+<h3 style="margin-top: 5px">コード進行</h3>
+<div style="margin-top: 5px">
+    <textarea rows="3" style="width: 100%" id="chord-syntax-input" oninput="onInput(event)" placeholder="GM7 A | Bm A | GM7 C | Bsus4 B"></textarea>
 </div>
-<div>
-    ↓ディグリーネーム（度数表記）↓
-</div>
-<div>
+<h3 style="margin-top: 5px">↓ディグリーネーム（度数表記）</h3>
+<div style="margin-top: 5px">
     <textarea rows="3" style="width: 100%" id="degree-syntax-output" readonly></textarea>
 </div>
